@@ -1,15 +1,11 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
- * Description of Xpath
+ * Class made for getting important SEO markup in a page
  *
  * @author mark.dilla
+ * 
+ * Use: $param = new Xpath(URL);
  */
 class Xpath {
 
@@ -25,13 +21,13 @@ class Xpath {
         $this->DOM = $this->domObject();
     }
 
-    public function scrapyCurl($proxy = NULL) {
+    public function curlPage($proxy = NULL) {
         $curl = curl_init($this->URL);
 
         if ($proxy != null) {
             curl_setopt($curl, CURLOPT_PROXY, $proxy);
         }
-        
+        //custom user agent and header setting in curl
 //        $agent= 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0.1';
 //        $curlHeaders = array (
 //                'Accept: text/html',
@@ -43,23 +39,26 @@ class Xpath {
 //                'Referer: http://example.com/',
 //                'Host: blog.corp.ringcentral.com', //Host domain
 //                'Cache-Control: no-cache'
-//        );
-        
+//        );        
         //curl_setopt($curl, CURLOPT_HTTPHEADER, $curlHeaders);
+        
         curl_setopt($curl, CURLOPT_HEADER, TRUE);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        
         //curl_setopt($curl, CURLOPT_ENCODING , "gzip");
+        
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        //curl_setopt($curl, CURLOPT_USERAGENT, $agent);
         
+        //curl_setopt($curl, CURLOPT_USERAGENT, $agent);        
 //        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 //        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 //        curl_setopt($curl, CURLOPT_TCP_KEEPALIVE, 1);
 //        curl_setopt($curl, CURLOPT_TCP_KEEPIDLE, 2);
 //        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT ,550000000);
 //        curl_setopt($curl, CURLOPT_TIMEOUT, 5500000000);
+        
         $page = curl_exec($curl);
         if (curl_errno($curl)) { // check for execution errors
             echo 'Curl error: ' . curl_error($curl);
@@ -96,21 +95,22 @@ class Xpath {
     }
     
     public function getVideoId(){
-        $altList = array();
+        $videoIDList = array();
         $tags = $this->getMarkupTag("a");
         foreach ($tags as $tag){
-            $tag->getAttribute('videolistid') == "" ? $altList[] = 'none' : $altList[] = $tag->getAttribute('videolistid');
+            $tag->getAttribute('videolistid') == "" ? $videoIDList[] = 'none' : $videoIDList[] = $tag->getAttribute('videolistid');
         }
-        return $altList;
+        return $videoIDList;
     }
     
+    //return the list of href attribute values in anchor tags
     public function getAnchorHref(){
-        $altList = array();
+        $hrefList = array();
         $tags = $this->getMarkupTag("a");
         foreach ($tags as $tag){
-            $tag->getAttribute('href') == "" ? $altList[] = 'none' : $altList[] = $tag->getAttribute('href');
+            $tag->getAttribute('href') == "" ? $hrefList[] = 'none' : $hrefList[] = $tag->getAttribute('href');
         }
-        return $altList;
+        return $hrefList;
     }
     
     function DOMinnerHTML(DOMNode $element) {
@@ -121,16 +121,18 @@ class Xpath {
         }
         return $innerHTML;
     }
-
+    
+    //return the list of anchor tags
     public function getAnchor(){
-        $altList = array();
+        $anchorList = array();
         $tags = $this->getMarkupTag("a");
         foreach ($tags as $tag){
-            $altList[] = htmlentities(str_replace("Ã‚", "", $this->DOMinnerHTML($tag)));
+            $anchorList[] = htmlentities(str_replace("Ã‚", "", $this->DOMinnerHTML($tag)));
         }
-        return $altList;
+        return $anchorList;
     }
     
+    // return the list of external Javascript file in the page
     public function getJSFile(){
         $jsList = array();
         $tags = $this->getMarkupTag("script");
@@ -148,7 +150,7 @@ class Xpath {
         return $jsList;
     }
 
-
+    //return the list of external CSS in the page
     public function getCSSfile(){
         $cssList = array();
         $tags = $this->getMarkupTag("link");
@@ -216,12 +218,12 @@ class Xpath {
     }
 
     public function getFollow(){
-        $altList = array();
+        $relList = array();
         $tags = $this->getMarkupTag("a");
         foreach ($tags as $tag){
-            $tag->getAttribute('rel') == "" ? $altList[] = 'follow' : $altList[] = $tag->getAttribute('rel');
+            $tag->getAttribute('rel') == "" ? $relList[] = 'follow' : $relList[] = $tag->getAttribute('rel');
         }
-        return $altList;
+        return $relList;
     }
 
     private function getMarkupTag($tag){
@@ -236,7 +238,7 @@ class Xpath {
     }
     
     private function domObject(){
-        $page = $this->scrapyCurl();
+        $page = $this->curlPage();
         $DOM = new DOMDocument;
         libxml_use_internal_errors(true);
         if (!$DOM->loadHTML($page)) {
