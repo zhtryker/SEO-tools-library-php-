@@ -2,6 +2,21 @@
 
 /**
  * Class made for getting important SEO markup in a page
+ * image tags
+ * image tag alt attributes
+ * image tag src value
+ * title tag texts
+ * canonical value
+ * meta description
+ * TwitterCards title value
+ * TwitterCards Description value
+ * OpenGraph title value
+ * OpenGraph Description value
+ * CSS files
+ * JS files
+ * anchor tags
+ * anchor tag rel attribute value
+ * 
  *
  * @author mark.dilla
  * 
@@ -13,12 +28,12 @@ class Xpath {
     private $home;
     private $DOM;
     
-    public function __construct($URL) {
+    public function __construct($URL, $proxy = NULL) {
         $this->URL = $URL;
         $parsed = parse_url($URL);
         
         $this->home = $parsed["scheme"] . "://" . $parsed["host"];
-        $this->DOM = $this->domObject();
+        $this->DOM = $this->domObject($proxy);
     }
 
     public function curlPage($proxy = NULL) {
@@ -237,8 +252,8 @@ class Xpath {
 	return $entries = $xpath->query($query);
     }
     
-    private function domObject(){
-        $page = $this->curlPage();
+    private function domObject($proxy = NULL){
+        $page = $this->curlPage($proxy);
         $DOM = new DOMDocument;
         libxml_use_internal_errors(true);
         if (!$DOM->loadHTML($page)) {
